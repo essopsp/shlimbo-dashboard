@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f172a">
+    <title>Shlimbo Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <h1>🖥️ Server Dashboard</h1>
+            <div class="status">
+                <span class="status-dot" id="connectionStatus"></span>
+                <span id="lastUpdate">Connecting...</span>
+            </div>
+        </header>
+
+        <main class="main">
+            <!-- Quick Stats Grid -->
+            <section class="stats-grid">
+                <div class="card card-cpu">
+                    <div class="card-icon">⚡</div>
+                    <div class="card-content">
+                        <span class="card-label">CPU Usage</span>
+                        <span class="card-value" id="cpuValue">--%</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="cpuBar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-memory">
+                    <div class="card-icon">💾</div>
+                    <div class="card-content">
+                        <span class="card-label">Memory</span>
+                        <span class="card-value" id="memValue">--%</span>
+                        <span class="card-sub" id="memDetail">-- / --</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="memBar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-disk">
+                    <div class="card-icon">💿</div>
+                    <div class="card-content">
+                        <span class="card-label">Disk</span>
+                        <span class="card-value" id="diskValue">--%</span>
+                        <span class="card-sub" id="diskDetail">-- / --</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="diskBar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-containers">
+                    <div class="card-icon">🐳</div>
+                    <div class="card-content">
+                        <span class="card-label">Containers</span>
+                        <span class="card-value" id="containerValue">--</span>
+                        <span class="card-sub" id="containerStatus">Loading...</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Coolify Status -->
+            <section class="section">
+                <h2 class="section-title">Services Status</h2>
+                <div class="service-row">
+                    <span class="service-name">Coolify API</span>
+                    <span class="service-status" id="coolifyStatus">Checking...</span>
+                </div>
+                <div class="service-row">
+                    <span class="service-name">Hostname</span>
+                    <span class="service-value" id="hostname">--</span>
+                </div>
+                <div class="service-row">
+                    <span class="service-name">Uptime</span>
+                    <span class="service-value" id="uptime">--</span>
+                </div>
+                <div class="service-row">
+                    <span class="service-name">Load Average</span>
+                    <span class="service-value" id="loadavg">--</span>
+                </div>
+            </section>
+
+            <!-- Containers List -->
+            <section class="section containers-section">
+                <h2 class="section-title">
+                    <span>Running Containers</span>
+                    <span class="badge" id="containerCount">0</span>
+                </h2>
+                <div class="containers-list" id="containersList">
+                    <div class="loading">Loading containers...</div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <span>🤖 Powered by Shlimbo</span>
+            <span id="refreshInfo">Auto-refresh: ON</span>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
