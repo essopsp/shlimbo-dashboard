@@ -204,3 +204,10 @@ class Dashboard {
     }
 }
 
+// Initialize dashboard when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => new Dashboard());
+} else {
+    new Dashboard();
+}
+
