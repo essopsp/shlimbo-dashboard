@@ -106,10 +106,10 @@ async function getStats() {
         const [oneMinLoad] = os.loadavg();
         const loadAvg = oneMinLoad.toFixed(2);
 
-        // Coolify health
+        // Coolify health (internal port is 8080, container name is 'coolify')
         let coolifyHealth = 'unknown';
         try {
-            const { stdout } = await execAsync("curl -s http://coolify:8000/api/health || curl -s http://localhost:8000/api/health");
+            const { stdout } = await execAsync("curl -s --max-time 3 http://coolify:8080/api/health 2>/dev/null || echo 'FAILED'");
             coolifyHealth = stdout.trim() === 'OK' ? 'healthy' : 'unhealthy';
         } catch (e) {
             coolifyHealth = 'unreachable';
