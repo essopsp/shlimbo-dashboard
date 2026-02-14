@@ -1,13 +1,14 @@
 {
   "name": "shlimbo-dashboard",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Real-time server dashboard for Coolify environment",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "dockerode": "^4.0.2",
+    "express": "^4.18.2"
   }
 }
