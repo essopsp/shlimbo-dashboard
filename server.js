@@ -90,8 +90,17 @@ async function getStats() {
             console.log('Docker API error:', e.message);
         }
 
-        // Uptime
-        const uptime = require('child_process').execSync('uptime -p', { encoding: 'utf-8' }).trim();
+        // Uptime (BusyBox compatible)
+        let uptime = 'unknown';
+        try {
+            const uptimeSeconds = os.uptime();
+            const days = Math.floor(uptimeSeconds / 86400);
+            const hours = Math.floor((uptimeSeconds % 86400) / 3600);
+            const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+            uptime = `up ${days} days, ${hours} hours, ${minutes} minutes`;
+        } catch (e) {
+            uptime = 'unknown';
+        }
 
         // Load average
         const [oneMinLoad] = os.loadavg();
