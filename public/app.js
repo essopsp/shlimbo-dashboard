@@ -12,21 +12,28 @@ class Dashboard {
             memory: []
         };
         this.maxHistoryPoints = 20;
+        this.matrixGlyphs = '01アカサタナハマヤラワ0123456789ABCDEF';
         this.elements = this.cacheElements();
         this.init();
     }
 
     cacheElements() {
         return {
+            matrixCanvas: document.getElementById('matrixCanvas'),
+            matrixTerminal: document.getElementById('matrixTerminal'),
             cpuValue: document.getElementById('cpuValue'),
             cpuBar: document.getElementById('cpuBar'),
             cpuSpark: document.getElementById('cpuSpark'),
             cpuTrendLabel: document.getElementById('cpuTrendLabel'),
+            cpuChart: document.getElementById('cpuChart'),
+            cpuChartReadout: document.getElementById('cpuChartReadout'),
             memValue: document.getElementById('memValue'),
             memDetail: document.getElementById('memDetail'),
             memBar: document.getElementById('memBar'),
             memSpark: document.getElementById('memSpark'),
             memTrendLabel: document.getElementById('memTrendLabel'),
+            memChart: document.getElementById('memChart'),
+            memChartReadout: document.getElementById('memChartReadout'),
             diskValue: document.getElementById('diskValue'),
             diskDetail: document.getElementById('diskDetail'),
             diskBar: document.getElementById('diskBar'),
@@ -50,6 +57,8 @@ class Dashboard {
 
     init() {
         this.attachEvents();
+        this.startMatrixRain();
+        this.renderMatrixTerminal();
         this.fetchStats();
         this.startAutoRefresh();
 
@@ -80,13 +89,14 @@ class Dashboard {
         this.elements.refreshNow.addEventListener('click', () => this.fetchStats());
         this.elements.containerSearch.addEventListener('input', () => this.renderContainers(this.containerData));
         this.elements.containerSort.addEventListener('change', () => this.renderContainers(this.containerData));
+        window.addEventListener('resize', () => this.sizeMatrixCanvas());
     }
 
     startAutoRefresh() {
         if (this.intervalId || !this.isAutoRefreshEnabled) return;
         this.intervalId = setInterval(() => this.fetchStats(), this.refreshInterval);
         this.elements.refreshInfo.textContent = 'Auto-refresh: ON';
-        this.elements.refreshInfo.style.color = 'var(--accent-green)';
+        this.elements.refreshInfo.style.color = 'var(--accent-strong)';
     }
 
     stopAutoRefresh() {
@@ -95,13 +105,13 @@ class Dashboard {
             this.intervalId = null;
         }
         this.elements.refreshInfo.textContent = 'Auto-refresh: PAUSED';
-        this.elements.refreshInfo.style.color = 'var(--accent-yellow)';
+        this.elements.refreshInfo.style.color = 'var(--accent-warn)';
     }
 
     async fetchStats() {
         try {
             const response = await fetch('/api/stats', {
-                headers: { 'Accept': 'application/json' }
+                headers: { Accept: 'application/json' }
             });
 
             if (!response.ok) {
@@ -111,10 +121,9 @@ class Dashboard {
             const data = await response.json();
             this.handleSuccess(data);
             this.retries = 0;
-
         } catch (error) {
             console.error('Fetch error:', error);
-            this.handleError(error);
+            this.handleError();
         }
     }
 
@@ -135,7 +144,9 @@ class Dashboard {
             this.elements.cpuBar.style.width = `${Math.min(cpuPercent, 100)}%`;
             this.elements.cpuBar.style.backgroundColor = this.getColorForPercent(cpuPercent);
             this.elements.cpuTrendLabel.textContent = this.getTrendLabel(this.history.cpu);
+            this.elements.cpuChartReadout.textContent = `${data.cpu.cores || '--'} cores | ${this.getHealthLabel(cpuPercent)}`;
             this.renderSparkline(this.elements.cpuSpark, this.history.cpu);
+            this.renderChart(this.elements.cpuChart, this.history.cpu, 'cpu');
         }
 
         if (data.memory) {
@@ -146,7 +157,9 @@ class Dashboard {
             this.elements.memBar.style.width = `${Math.min(memoryPercent, 100)}%`;
             this.elements.memBar.style.backgroundColor = this.getColorForPercent(memoryPercent);
             this.elements.memTrendLabel.textContent = this.getTrendLabel(this.history.memory);
+            this.elements.memChartReadout.textContent = `${this.formatBytes(data.memory.available)} free | ${this.getHealthLabel(memoryPercent)}`;
             this.renderSparkline(this.elements.memSpark, this.history.memory);
+            this.renderChart(this.elements.memChart, this.history.memory, 'memory');
         }
 
         if (data.disk) {
@@ -174,6 +187,8 @@ class Dashboard {
         if (data.hostname) this.elements.hostname.textContent = data.hostname;
         if (data.uptime) this.elements.uptime.textContent = data.uptime;
         if (data.loadAvg) this.elements.loadavg.textContent = data.loadAvg;
+
+        this.renderMatrixTerminal(data);
     }
 
     handleError() {
@@ -256,23 +271,160 @@ class Dashboard {
         return 'stable';
     }
 
+    getHealthLabel(percent) {
+        if (percent < 45) return 'optimal';
+        if (percent < 70) return 'watch';
+        return 'hot';
+    }
+
     renderSparkline(element, points) {
         if (!element || points.length === 0) return;
         const max = Math.max(...points, 100);
 
         element.innerHTML = points
             .map((point) => {
-                const h = Math.max(6, Math.round((point / max) * 100));
+                const h = Math.max(8, Math.round((point / max) * 100));
                 const color = this.getColorForPercent(point);
                 return `<span class="sparkline-bar" style="height:${h}%;background:${color}"></span>`;
             })
             .join('');
     }
 
+    renderChart(element, points, type) {
+        if (!element || points.length === 0) return;
+
+        const width = 600;
+        const height = 220;
+        const padding = 18;
+        const max = 100;
+        const step = points.length > 1 ? (width - padding * 2) / (points.length - 1) : 0;
+
+        const linePath = points.map((point, index) => {
+            const x = padding + (step * index);
+            const y = height - padding - ((point / max) * (height - padding * 2));
+            return `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`;
+        }).join(' ');
+
+        const areaPath = `${linePath} L ${padding + (step * (points.length - 1))} ${height - padding} L ${padding} ${height - padding} Z`;
+        const lastPoint = points[points.length - 1];
+        const lastX = padding + (step * (points.length - 1));
+        const lastY = height - padding - ((lastPoint / max) * (height - padding * 2));
+        const stroke = type === 'cpu' ? '#7dffae' : '#7df9ff';
+        const fill = type === 'cpu'
+            ? 'rgba(125, 255, 174, 0.16)'
+            : 'rgba(125, 249, 255, 0.16)';
+
+        element.innerHTML = `
+            <defs>
+                <filter id="${type}Glow">
+                    <feGaussianBlur stdDeviation="2.5" result="blur"></feGaussianBlur>
+                    <feMerge>
+                        <feMergeNode in="blur"></feMergeNode>
+                        <feMergeNode in="SourceGraphic"></feMergeNode>
+                    </feMerge>
+                </filter>
+            </defs>
+            <path d="${areaPath}" fill="${fill}"></path>
+            <path d="${linePath}" fill="none" stroke="${stroke}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" filter="url(#${type}Glow)"></path>
+            <circle cx="${lastX.toFixed(2)}" cy="${lastY.toFixed(2)}" r="4.5" fill="${stroke}"></circle>
+        `;
+    }
+
+    renderMatrixTerminal(data = {}) {
+        if (!this.elements.matrixTerminal) return;
+
+        const cpu = this.history.cpu.at(-1);
+        const memory = this.history.memory.at(-1);
+        const rows = [
+            `host :: ${data.hostname || '--'}`,
+            `load :: ${data.loadAvg || '--'}`,
+            `cpu :: ${cpu !== undefined ? cpu.toFixed(1) + '%' : '--'}`,
+            `mem :: ${memory !== undefined ? memory + '%' : '--'}`,
+            `disk :: ${this.elements.diskValue.textContent}`,
+            `coolify :: ${data.coolify || 'pending'}`,
+            `containers :: ${this.elements.containerValue.textContent}`,
+            `uptime :: ${data.uptime || '--'}`,
+            `vector :: ${this.randomGlyphString(8)}`,
+            `signal :: ${this.randomGlyphString(8)}`,
+            `trace :: ${this.randomGlyphString(8)}`,
+            `clock :: ${new Date().toLocaleTimeString()}`
+        ];
+
+        this.elements.matrixTerminal.innerHTML = rows
+            .map((row) => `<div class="matrix-cell">${this.escapeHtml(row)}</div>`)
+            .join('');
+    }
+
+    startMatrixRain() {
+        const canvas = this.elements.matrixCanvas;
+        if (!canvas) return;
+
+        const context = canvas.getContext('2d');
+        const fontSize = 14;
+        let columns = 0;
+        let drops = [];
+
+        const resetDrops = () => {
+            columns = Math.max(1, Math.floor(canvas.width / fontSize));
+            drops = Array.from({ length: columns }, () => Math.random() * canvas.height / fontSize);
+        };
+
+        this.sizeMatrixCanvas();
+        resetDrops();
+
+        const draw = () => {
+            context.fillStyle = 'rgba(2, 5, 3, 0.11)';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = '#5dff96';
+            context.font = `${fontSize}px JetBrains Mono`;
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = this.matrixGlyphs.charAt(Math.floor(Math.random() * this.matrixGlyphs.length));
+                context.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+
+                drops[i] += 1;
+            }
+
+            window.requestAnimationFrame(draw);
+        };
+
+        window.addEventListener('resize', () => {
+            this.sizeMatrixCanvas();
+            resetDrops();
+        });
+
+        draw();
+    }
+
+    sizeMatrixCanvas() {
+        const canvas = this.elements.matrixCanvas;
+        if (!canvas) return;
+
+        const ratio = window.devicePixelRatio || 1;
+        canvas.width = Math.floor(window.innerWidth * ratio);
+        canvas.height = Math.floor(window.innerHeight * ratio);
+        canvas.style.width = `${window.innerWidth}px`;
+        canvas.style.height = `${window.innerHeight}px`;
+        const context = canvas.getContext('2d');
+        context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+
+    randomGlyphString(length) {
+        let output = '';
+        for (let i = 0; i < length; i++) {
+            output += this.matrixGlyphs.charAt(Math.floor(Math.random() * this.matrixGlyphs.length));
+        }
+        return output;
+    }
+
     getColorForPercent(percent) {
-        if (percent < 50) return 'var(--accent-green)';
-        if (percent < 80) return 'var(--accent-yellow)';
-        return 'var(--accent-red)';
+        if (percent < 50) return 'var(--accent-strong)';
+        if (percent < 80) return 'var(--accent-warn)';
+        return 'var(--accent-danger)';
     }
 
     formatBytes(bytes) {

@@ -7,18 +7,21 @@
     <title>Shlimbo Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
+    <canvas class="matrix-bg" id="matrixCanvas" aria-hidden="true"></canvas>
     <div class="app">
         <header class="header">
-            <div>
+            <div class="header-copy">
                 <p class="eyebrow">Shlimbo Monitor</p>
-                <h1>🖥️ Server Dashboard</h1>
+                <h1>System Command Deck</h1>
+                <p class="header-subtitle">Live infrastructure telemetry with terminal-grade signal and runtime drift tracking.</p>
             </div>
             <div class="header-right">
                 <div class="status">
                     <span class="status-dot" id="connectionStatus"></span>
+                    <span class="status-label">link</span>
                     <span id="lastUpdate">Connecting...</span>
                 </div>
                 <div class="toolbar">
@@ -32,12 +35,13 @@
             <section class="stats-grid">
                 <div class="card card-cpu">
                     <div class="card-head">
-                        <span class="card-icon">⚡</span>
+                        <span class="card-kicker">compute</span>
                         <span class="chip" id="cpuTrendLabel">stable</span>
                     </div>
                     <div class="card-content">
                         <span class="card-label">CPU Usage</span>
                         <span class="card-value" id="cpuValue">--%</span>
+                        <span class="card-sub">per-core pressure / rolling window</span>
                         <div class="sparkline" id="cpuSpark"></div>
                         <div class="progress-bar">
                             <div class="progress-fill" id="cpuBar"></div>
@@ -47,11 +51,11 @@
 
                 <div class="card card-memory">
                     <div class="card-head">
-                        <span class="card-icon">💾</span>
+                        <span class="card-kicker">memory</span>
                         <span class="chip" id="memTrendLabel">stable</span>
                     </div>
                     <div class="card-content">
-                        <span class="card-label">Memory</span>
+                        <span class="card-label">Memory Pressure</span>
                         <span class="card-value" id="memValue">--%</span>
                         <span class="card-sub" id="memDetail">-- / --</span>
                         <div class="sparkline" id="memSpark"></div>
@@ -63,7 +67,7 @@
 
                 <div class="card card-disk">
                     <div class="card-head">
-                        <span class="card-icon">💿</span>
+                        <span class="card-kicker">storage</span>
                     </div>
                     <div class="card-content">
                         <span class="card-label">Disk</span>
@@ -77,12 +81,45 @@
 
                 <div class="card card-containers">
                     <div class="card-head">
-                        <span class="card-icon">🐳</span>
+                        <span class="card-kicker">runtime</span>
                     </div>
                     <div class="card-content">
                         <span class="card-label">Containers</span>
                         <span class="card-value" id="containerValue">--</span>
                         <span class="card-sub" id="containerStatus">Loading...</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section analytics-shell">
+                <div class="section-title-row analytics-heading">
+                    <div>
+                        <p class="section-eyebrow">signal maps</p>
+                        <h2 class="section-title">Matrix + Load Analytics</h2>
+                    </div>
+                    <span class="analytics-meta">rolling last 20 samples</span>
+                </div>
+                <div class="analytics-grid">
+                    <div class="panel panel-matrix">
+                        <div class="panel-head">
+                            <span class="panel-title">Matrix Stream</span>
+                            <span class="panel-badge">live</span>
+                        </div>
+                        <div class="matrix-terminal" id="matrixTerminal"></div>
+                    </div>
+                    <div class="panel panel-chart">
+                        <div class="panel-head">
+                            <span class="panel-title">CPU Trace</span>
+                            <span class="panel-readout" id="cpuChartReadout">awaiting input</span>
+                        </div>
+                        <svg class="chart-svg" id="cpuChart" viewBox="0 0 600 220" preserveAspectRatio="none" role="img" aria-label="CPU usage chart"></svg>
+                    </div>
+                    <div class="panel panel-chart">
+                        <div class="panel-head">
+                            <span class="panel-title">Memory Trace</span>
+                            <span class="panel-readout" id="memChartReadout">awaiting input</span>
+                        </div>
+                        <svg class="chart-svg" id="memChart" viewBox="0 0 600 220" preserveAspectRatio="none" role="img" aria-label="Memory usage chart"></svg>
                     </div>
                 </div>
             </section>
@@ -128,7 +165,7 @@
         </main>
 
         <footer class="footer">
-            <span>🤖 Powered by Shlimbo</span>
+            <span>Powered by Shlimbo</span>
             <span id="refreshInfo">Auto-refresh: ON</span>
         </footer>
     </div>
