@@ -245,7 +245,7 @@ class Dashboard {
                     <div class="container-status ${statusClass}"></div>
                     <div class="container-info">
                         <div class="container-name">${this.escapeHtml(container.name)}</div>
-                        <div class="container-ports">${this.escapeHtml(container.ports || 'no ports')}</div>
+                        <div class="container-ports">${this.escapeHtml('hidden ports')}</div>
                     </div>
                     <div class="container-state ${statusClass}">${this.escapeHtml(statusText.split(' ')[0])}</div>
                 </div>
