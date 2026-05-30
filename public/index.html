@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#020503">
     <title>Shlimbo Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,6 +11,14 @@
 </head>
 <body>
     <canvas class="matrix-bg" id="matrixCanvas" aria-hidden="true"></canvas>
+
+    <!-- Alert banner (hidden by default) -->
+    <div class="alert-banner" id="alertBanner" style="display:none">
+        <span class="alert-icon">⚠</span>
+        <span id="alertMessage">System alert</span>
+        <button class="alert-close" id="alertClose">×</button>
+    </div>
+
     <div class="app">
         <header class="header">
             <div class="header-copy">
@@ -27,6 +35,7 @@
                 <div class="toolbar">
                     <button id="toggleRefresh" class="btn">Pause</button>
                     <button id="refreshNow" class="btn btn-primary">Refresh now</button>
+                    <button id="logoutBtn" class="btn btn-logout">Logout</button>
                 </div>
             </div>
         </header>
@@ -89,6 +98,31 @@
                         <span class="card-sub" id="containerStatus">Loading...</span>
                     </div>
                 </div>
+
+                <div class="card card-network">
+                    <div class="card-head">
+                        <span class="card-kicker">network</span>
+                    </div>
+                    <div class="card-content">
+                        <span class="card-label">Network I/O</span>
+                        <span class="card-value" id="netRxValue">--</span>
+                        <span class="card-sub" id="netTxDetail">Tx: --</span>
+                        <div class="net-bars">
+                            <div class="net-bar-row">
+                                <span class="net-bar-label">Rx</span>
+                                <div class="net-bar-track">
+                                    <div class="net-bar-fill net-bar-rx" id="netRxBar" style="width:0%"></div>
+                                </div>
+                            </div>
+                            <div class="net-bar-row">
+                                <span class="net-bar-label">Tx</span>
+                                <div class="net-bar-track">
+                                    <div class="net-bar-fill net-bar-tx" id="netTxBar" style="width:0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <section class="section analytics-shell">
@@ -141,6 +175,18 @@
                 <div class="service-row">
                     <span class="service-name">Load Average</span>
                     <span class="service-value" id="loadavg">--</span>
+                </div>
+            </section>
+
+            <section class="section container-resources-section" id="containerResourcesSection" style="display:none">
+                <div class="section-title-row">
+                    <h2 class="section-title">
+                        <span>Container Resources</span>
+                        <span class="badge" id="containerResCount">0</span>
+                    </h2>
+                </div>
+                <div class="container-resources-list" id="containerResourcesList">
+                    <div class="loading">Loading container resources...</div>
                 </div>
             </section>
 
