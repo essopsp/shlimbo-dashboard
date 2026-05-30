@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#020503">
+    <title>Shlimbo Dashboard — Auth</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .auth-page {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .auth-card {
+            position: relative;
+            width: 100%;
+            max-width: 440px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: linear-gradient(180deg, rgba(5, 23, 15, 0.92), rgba(4, 12, 9, 0.96));
+            box-shadow: var(--shadow), 0 0 80px rgba(57, 255, 136, 0.04);
+            padding: 36px 32px 32px;
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(90deg, rgba(125, 255, 174, 0.03), transparent 22%, transparent 78%, rgba(125, 255, 174, 0.03)),
+                linear-gradient(180deg, rgba(125, 255, 174, 0.05), transparent 44%);
+            pointer-events: none;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 28px;
+            position: relative;
+        }
+
+        .auth-header .eyebrow {
+            color: var(--accent-cyan);
+            margin-bottom: 8px;
+        }
+
+        .auth-header h1 {
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 4vw, 2.6rem);
+            line-height: 0.94;
+            text-transform: uppercase;
+            text-shadow: 0 0 28px rgba(57, 255, 136, 0.12);
+        }
+
+        .auth-header p {
+            color: var(--text-soft);
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: relative;
+        }
+
+        .auth-form label {
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-soft);
+        }
+
+        .auth-form .input {
+            width: 100%;
+            border: 1px solid var(--line-strong);
+            border-radius: var(--radius-sm);
+            padding: 14px 12px;
+            color: var(--text);
+            font: inherit;
+            font-size: 14px;
+            outline: none;
+            background: rgba(2, 10, 7, 0.8);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .auth-form .input:focus {
+            border-color: var(--accent-strong);
+            box-shadow: 0 0 0 1px rgba(57, 255, 136, 0.18), 0 0 22px rgba(57, 255, 136, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .auth-form .input::placeholder {
+            color: var(--text-dim);
+        }
+
+        .auth-form .btn {
+            width: 100%;
+            border: 1px solid var(--line-strong);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            color: #03110a;
+            background: linear-gradient(180deg, #a7ffd0 0%, #51ff9a 100%);
+            font: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-top: 4px;
+        }
+
+        .auth-form .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 0 0 1px rgba(125, 255, 174, 0.18), 0 0 22px rgba(57, 255, 136, 0.12);
+        }
+
+        .auth-form .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .auth-error {
+            color: var(--accent-danger);
+            font-size: 12px;
+            text-align: center;
+            min-height: 20px;
+        }
+
+        .auth-matrix {
+            position: fixed;
+            inset: 0;
+            opacity: 0.12;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 11px;
+            color: var(--text-dim);
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <canvas class="auth-matrix" id="matrixCanvas"></canvas>
+
+    <div class="auth-page">
+        <div class="auth-card">
+            <div class="auth-header">
+                <p class="eyebrow">Shlimbo Monitor</p>
+                <h1>Command Deck</h1>
+                <p>Enter your secret key to access the infrastructure dashboard.</p>
+            </div>
+
+            <form class="auth-form" id="authForm" autocomplete="off">
+                <label for="secretKey">Secret Key</label>
+                <input
+                    id="secretKey"
+                    class="input"
+                    type="password"
+                    placeholder="••••••••••••••••"
+                    required
+                    autofocus
+                />
+                <div class="auth-error" id="authError"></div>
+                <button type="submit" class="btn" id="authBtn">Authenticate</button>
+            </form>
+
+            <div class="auth-footer">
+                <span>SECURE CONNECTION · SHLIMBO v1.0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── Matrix Rain ──────────────────────────────────────────────
+        (function() {
+            const canvas = document.getElementById('matrixCanvas');
+            const ctx = canvas.getContext('2d');
+            const glyphs = '01アカサタナハマヤラワ0123456789ABCDEF';
+            let fontSize = 14;
+            let columns, drops;
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                columns = Math.max(1, Math.floor(canvas.width / fontSize));
+                drops = Array.from({ length: columns }, () => Math.random() * canvas.height / fontSize);
+            }
+
+            resize();
+            window.addEventListener('resize', resize);
+
+            function draw() {
+                ctx.fillStyle = 'rgba(2, 5, 3, 0.11)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#5dff96';
+                ctx.font = fontSize + 'px JetBrains Mono';
+
+                for (let i = 0; i < drops.length; i++) {
+                    const text = glyphs.charAt(Math.floor(Math.random() * glyphs.length));
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i] += 1;
+                }
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+
+        // ── Auth Form ────────────────────────────────────────────────
+        const form = document.getElementById('authForm');
+        const secretInput = document.getElementById('secretKey');
+        const errorEl = document.getElementById('authError');
+        const btn = document.getElementById('authBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorEl.textContent = '';
+            btn.disabled = true;
+            btn.textContent = 'Verifying...';
+
+            const secret = secretInput.value.trim();
+            if (!secret) {
+                errorEl.textContent = 'Please enter a secret key';
+                btn.disabled = false;
+                btn.textContent = 'Authenticate';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ secret }),
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.token) {
+                    sessionStorage.setItem('dashboard_token', data.token);
+                    window.location.href = '/';
+                } else {
+                    errorEl.textContent = data.error || 'Invalid secret key';
+                    secretInput.value = '';
+                    secretInput.focus();
+                }
+            } catch (err) {
+                errorEl.textContent = 'Connection error — is the server running?';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Authenticate';
+            }
+        });
+    </script>
+</body>
+</html>

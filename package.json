@@ -2,13 +2,27 @@
   "name": "shlimbo-dashboard",
   "version": "1.0.1",
   "description": "Real-time server dashboard for Coolify environment",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node src/server.js",
+    "test": "jest --passWithNoTests --forceExit"
   },
   "dependencies": {
+    "better-sqlite3": "^12.10.0",
     "cors": "^2.8.5",
     "dockerode": "^4.0.2",
-    "express": "^4.18.2"
+    "dotenv": "^17.4.2",
+    "express": "^4.18.2",
+    "express-rate-limit": "^8.5.2",
+    "helmet": "^8.2.0",
+    "jsonwebtoken": "^9.0.3",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0",
+    "prom-client": "^15.1.3",
+    "ws": "^8.21.0"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2",
+    "supertest": "^7.2.2"
   }
 }

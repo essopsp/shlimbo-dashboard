@@ -2,12 +2,20 @@ version: '3.8'
 
 services:
   dashboard:
-    build: .
+    build:
+      context: .
+      args:
+        - DOCKER_GID=${DOCKER_GID:-999}
     container_name: shlimbo-dashboard
     restart: unless-stopped
     environment:
       - NODE_ENV=production
       - PORT=3000
+      - DASHBOARD_SECRET=${DASHBOARD_SECRET}
+      - RESTART_TOKEN=${RESTART_TOKEN:-}
+      - ALERT_CPU=80
+      - ALERT_MEMORY=80
+      - ALERT_DISK=85
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
