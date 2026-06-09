@@ -42,11 +42,11 @@ app.get('/metrics', async (req, res) => {
   }
 });
 
+// Static files (public, no auth)
+app.use(express.static(path.join(__dirname, '..', 'public')));
+
 // Auth middleware (skip public paths)
 app.use(authMiddleware);
-
-// Static files
-app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // API routes mounted under /api
 // Rate limiters are applied per-route inside apiRoutes (see routes/api.js)

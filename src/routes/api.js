@@ -105,7 +105,10 @@ async function checkCoolifyHealth() {
       new Promise((_, reject) => setTimeout(() => reject(new Error('Coolify health check timed out')), 4000)),
     ]);
     const stdout = Array.isArray(result) ? result[0] : result.stdout;
-    return stdout?.trim() === 'OK' ? 'healthy' : 'unhealthy';
+    const trimmed = stdout?.trim();
+    if (trimmed === 'OK' || trimmed === 'healthy') return 'healthy';
+    if (trimmed === 'FAILED') return 'unhealthy';
+    return 'unhealthy';
   } catch (e) {
     return 'unreachable';
   }
