@@ -13,13 +13,8 @@ function authMiddleware(req, res, next) {
     return next();
   }
 
-  // Skip auth for the login page and static files
+  // Skip auth for root and WebSocket
   if (req.path === '/' || req.path.startsWith('/ws')) {
-    return next();
-  }
-
-  // Skip auth for static files
-  if (req.path.startsWith('/ws')) {
     return next();
   }
 
